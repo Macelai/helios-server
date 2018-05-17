@@ -13,10 +13,15 @@ from django.utils import timezone
 import sys, os, cgi, urllib, urllib2, re, uuid, datetime
 from xml.etree import ElementTree
 
-CAS_EMAIL_DOMAIN = "princeton.edu"
-CAS_URL= 'https://fed.princeton.edu/cas/'
-CAS_LOGOUT_URL = 'https://fed.princeton.edu/cas/logout?service=%s'
-CAS_SAML_VALIDATE_URL = 'https://fed.princeton.edu/cas/samlValidate?TARGET=%s'
+#CAS_EMAIL_DOMAIN = "princeton.edu"
+#CAS_URL= 'https://fed.princeton.edu/cas/'
+#CAS_LOGOUT_URL = 'https://fed.princeton.edu/cas/logout?service=%s'
+#CAS_SAML_VALIDATE_URL = 'https://fed.princeton.edu/cas/samlValidate?TARGET=%s'
+CAS_EMAIL_DOMAIN = "ufsc.br"
+CAS_URL= 'https://sistemas.ufsc.br/'
+CAS_LOGOUT_URL = 'https://sistemas.ufsc.br/logout?service=%s'
+CAS_SAML_VALIDATE_URL = 'https://sistemas.ufsc.br/samlValidate?service=%s&ticket=%s'
+CAS_ELIGIBILITY_URL = 'https://sistemas.ufsc.br/samlValidate'
 
 # eligibility checking
 if hasattr(settings, 'CAS_USERNAME'):
@@ -35,9 +40,9 @@ def _get_service_url():
   from helios_auth.views import after
   from django.conf import settings
   from django.core.urlresolvers import reverse
-  
+
   return settings.SECURE_URL_HOST + reverse(after)
-  
+
 def get_auth_url(request, redirect_url):
   request.session['cas_redirect_url'] = redirect_url
   return CAS_URL + 'login?service=' + urllib.quote(_get_service_url())
@@ -49,11 +54,11 @@ def get_user_category(user_id):
   auth_handler.add_password(realm=CAS_ELIGIBILITY_REALM, uri= theurl, user= CAS_USERNAME, passwd = CAS_PASSWORD)
   opener = urllib2.build_opener(auth_handler)
   urllib2.install_opener(opener)
-  
+
   result = urllib2.urlopen(CAS_ELIGIBILITY_URL % user_id).read().strip()
   parsed_result = ElementTree.fromstring(result)
   return parsed_result.text
-  
+
 def get_saml_info(ticket):
   """
   Using SAML, get all of the information needed
@@ -61,22 +66,22 @@ def get_saml_info(ticket):
 
   import logging
 
-  saml_request = """<?xml version='1.0' encoding='UTF-8'?> 
-  <soap-env:Envelope 
-     xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/'> 
+  saml_request = """<?xml version='1.0' encoding='UTF-8'?>
+  <soap-env:Envelope
+     xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/'>
      <soap-env:Header />
-     <soap-env:Body> 
+     <soap-env:Body>
        <samlp:Request xmlns:samlp="urn:oasis:names:tc:SAML:1.0:protocol"
                       MajorVersion="1" MinorVersion="1"
                       RequestID="%s"
                       IssueInstant="%sZ">
            <samlp:AssertionArtifact>%s</samlp:AssertionArtifact>
        </samlp:Request>
-     </soap-env:Body> 
+     </soap-env:Body>
   </soap-env:Envelope>
 """ % (uuid.uuid1(), timezone.now().isoformat(), ticket)
 
-  url = CAS_SAML_VALIDATE_URL % urllib.quote(_get_service_url())
+  url = CAS_SAML_VALIDATE_URL % (urllib.quote(_get_service_url()),ticket)
 
   # by virtue of having a body, this is a POST
   req = urllib2.Request(url, saml_request)
@@ -90,29 +95,32 @@ def get_saml_info(ticket):
   attributes = response.findall('{http://schemas.xmlsoap.org/soap/envelope/}Body/{urn:oasis:names:tc:SAML:1.0:protocol}Response/{urn:oasis:names:tc:SAML:1.0:assertion}Assertion/{urn:oasis:names:tc:SAML:1.0:assertion}AttributeStatement/{urn:oasis:names:tc:SAML:1.0:assertion}Attribute')
 
   values = {}
+  #handle1=open('file.txt','r+')
   for attribute in attributes:
     values[str(attribute.attrib['AttributeName'])] = attribute.findtext('{urn:oasis:names:tc:SAML:1.0:assertion}AttributeValue')
-  
+    #handle1.write("I AM NEW FILE")
+  #handle1.close()
   # parse response for netid, display name, and employee type (category)
-  return {'user_id': values.get('mail',None), 'name': values.get('displayName', None), 'category': values.get('employeeType',None)}
-  
+  info = {'name':  values.get('nome', None), 'category': values.get('employeeType',None)}
+  return {'user_id': values.get('login',None), 'name': values.get('nome', None), 'info': info, 'category': values.get('employeeType',None), 'token': values.get('token',None)}
+
 def get_user_info(user_id):
   url = 'http://dsml.princeton.edu/'
   headers = {'SOAPAction': "#searchRequest", 'Content-Type': 'text/xml'}
-  
-  request_body = """<?xml version='1.0' encoding='UTF-8'?> 
-  <soap-env:Envelope 
+
+  request_body = """<?xml version='1.0' encoding='UTF-8'?>
+  <soap-env:Envelope
      xmlns:xsd='http://www.w3.org/2001/XMLSchema'
      xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-     xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/'> 
-     <soap-env:Body> 
+     xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/'>
+     <soap-env:Body>
         <batchRequest xmlns='urn:oasis:names:tc:DSML:2:0:core'
   requestID='searching'>
-        <searchRequest 
+        <searchRequest
            dn='o=Princeton University, c=US'
            scope='wholeSubtree'
            derefAliases='neverDerefAliases'
-           sizeLimit='200'> 
+           sizeLimit='200'>
               <filter>
                    <equalityMatch name='uid'>
                             <value>%s</value>
@@ -124,26 +132,26 @@ def get_user_info(user_id):
                </attributes>
         </searchRequest>
        </batchRequest>
-     </soap-env:Body> 
+     </soap-env:Body>
   </soap-env:Envelope>
 """ % user_id
 
   req = urllib2.Request(url, request_body, headers)
   response = urllib2.urlopen(req).read()
-  
+
   # parse the result
   from xml.dom.minidom import parseString
-  
+
   response_doc = parseString(response)
-  
+
   # get the value elements (a bit of a hack but no big deal)
   values = response_doc.getElementsByTagName('value')
-  
+
   if len(values)>0:
     return {'name' : values[0].firstChild.wholeText, 'category' : values[1].firstChild.wholeText}
   else:
     return None
-  
+
 def get_user_info_special(ticket):
   # fetch the information from the CAS server
   val_url = CAS_URL + "validate" + \
@@ -154,9 +162,10 @@ def get_user_info_special(ticket):
   # success
   if len(r) == 2 and re.match("yes", r[0]) != None:
     netid = r[1].strip()
-    
-    category = get_user_category(netid)
-    
+
+    #category = get_user_category(netid)
+    category = None
+
     #try:
     #  user_info = get_user_info(netid)
     #except:
@@ -169,31 +178,31 @@ def get_user_info_special(ticket):
       info = {'name': user_info['name'], 'category': category}
     else:
       info = {'name': netid, 'category': category}
-      
+
     return {'user_id': netid, 'name': info['name'], 'info': info, 'token': None}
   else:
     return None
 
 def get_user_info_after_auth(request):
   ticket = request.GET.get('ticket', None)
-  
+
   # if no ticket, this is a logout
   if not ticket:
     return None
 
-  #user_info = get_saml_info(ticket)
-  user_info = get_user_info_special(ticket)
+  user_info = get_saml_info(ticket)
+  #user_info = get_user_info_special(ticket)
 
-  user_info['type'] = 'cas'  
+  user_info['type'] = 'cas'
 
   return user_info
-    
+
 def do_logout(user):
   """
   Perform logout of CAS by redirecting to the CAS logout URL
   """
   return HttpResponseRedirect(CAS_LOGOUT_URL % _get_service_url())
-  
+
 def update_status(token, message):
   """
   simple update
@@ -209,12 +218,12 @@ def send_message(user_id, name, user_info, subject, body):
     email = user_id
   else:
     email = "%s@%s" % (user_id, CAS_EMAIL_DOMAIN)
-    
+
   if user_info.has_key('name'):
     name = user_info["name"]
   else:
     name = email
-    
+
   send_mail(subject, body, settings.SERVER_EMAIL, ["%s <%s>" % (name, email)], fail_silently=False)
 
 #
@@ -235,7 +244,7 @@ def generate_constraint(category_id, user):
 
 def list_categories(user):
   current_year = datetime.datetime.now().year
-  return [{'id': str(y), 'name': 'Class of %s' % y} for y 
+  return [{'id': str(y), 'name': 'Class of %s' % y} for y
           in range(current_year, current_year+5)]
 
 def eligibility_category_id(constraint):
