@@ -1,14 +1,20 @@
-Dear {{voter.name}},
+Caro(a) {{voter.name}},
 
-You have successfully cast a vote in {{election.name}}.
+Este é um e-mail automático (favor não responder) para confirmar que seu voto foi depositado com sucesso em {{election.name}}.
 
-Your ballot is archived at: {{cast_vote_url}}
+Sua cédula está arquivada no endereço {{cast_vote_url}} 
 
 {% if election.use_voter_aliases %}
-This election uses voter aliases to protect your privacy.
-Your voter alias is: {{voter.alias}}.
+Esta eleição usa pseudônimos de eleitores para proteger sua privacidade.
+
+Seu pseudônimo é: {{voter.alias}}.
 {% endif %}
 
---
+---
 
-Helios
+e-Democracia - Eleições Digitais Seguras
+https://e-democracia.ufsc.br
+
+Serviço prestado pela Coordenadoria de Certificação Digital - CCD/SEPLAN/UFSC
+Desenvolvido pelo LabSEC/INE/CTC
+Apoiado pela SeTIC
