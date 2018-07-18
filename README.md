@@ -1,8 +1,8 @@
-
-
 # Guia de instalação e configuração do Helios
 
 *This README is intended for Portuguese audience.*
+
+* Este é um repositório particular em que novas funcionalidades, atualizações e outras atividades de interesse particular ou de pesquisa são realizadas. Se você está interessado em informações sobre o repositório de uso no IFSC(http://www.ifsc.edu.br), por favor acesse https://github.com/ifsc/helios-server
 
 versão 1.0  - adaptações realizadas para uso federado
 
@@ -12,11 +12,16 @@ Neste tutorial são descritos os principais passos para instalação de um servi
 
 *Supondo uma máquina apenas com o sistema operacional*
 
-Atualizações/instalações de pacotes:
+Atualizações/instalações de pacotes: 
 
     sudo apt-get dist-upgrade
 
     sudo apt-get install apache2 postgresql-9.3 postgresql-server-dev-9.3 python-dev libsasl2-dev libldap2-dev python-ldap gettext libapache2-mod-wsgi
+
+Para utilizar o login via shibboleth (federação), instalar também o módulo shib para o apache:
+
+	sudo apt-get install libapache2-mod-shib2
+
 
 Se for baixar e/ou atualizar o código via github:
 
@@ -30,8 +35,6 @@ Se for baixar e/ou atualizar o código via github:
     sudo su postgres
 
     psql
-
-    create user helios;
 
     create role helios with createdb createrole login;
     
@@ -52,13 +55,23 @@ Exception Type: 	OperationalError
 Exception Value: 	
 FATAL:  Peer authentication failed for user "helios"
 
+Para se conectar na base com um cliente como o pgAdmin, utilizar um túnel ssh. Editar ~/.ssh/config e inserir:
+
+
+	Host NOMEDOHOST
+	User NOMEDOUSER
+	Hostname ENDERECODOHOST
+	Port PORTASSH
+	LocalForward PORTALOCAL 127.0.0.1:PORTAREMOTA
+
+
+Na configuração do pgAdmin, usar como endereço do host o seu endereço e não esquecer que precisa haver uma conexão ssh aberta com o servidor do banco!
 
 ### Obtenção do código-fonte e preparação da aplicação
 
 Você pode baixar um zip com o fonte ou clonar o repositório. Supondo que o código vai ser baixado via git:
 
 *git clone https://github.com/shirlei/helios-server.git*
-
 
 Não é obrigatório, mas é uma boa prática, criar um ambiente virtual para a disponibilização do Helios, tanto para desenvolvimento quanto para implantação, pois isso permite separar as dependências do projeto e não interferir em outros sistemas na mesma máquina. 
 
@@ -82,7 +95,20 @@ Com o ambiente virtual ativado, instale os requisitos para a execução do helio
 
 *ATENÇÃO: Utilize o requirements.txt deste repositório, para instalar o pacote django-auth-ldap e outros necessários às customizações realizadas. Lembrando também que apesar de se pretender manter este repositório atualizado com o do Ben Adida, não necessariamente vai ser simultâneo, então se você utilizar o dele, pode haver versões diferentes de pacotes.*
 
-Após terminar a instalação dos pacotes necessários, é possível realizar as devidas execuções de banco de dados (criação de banco, tabelas, etc) executando o script reset.sh:
+Edite o arquivo settings.py, localize a seção databases e adicione as informações do banco de dados, conforme o exemplo:
+
+
+	DATABASES = {
+	'default': {
+	'ENGINE': 'django.db.backends.postgresql_psycopg2',
+	'NAME': 'helios',
+	'USER': 'helios',
+	'HOST': 'localhost',
+	'PASSWORD': 'SENHADOHELIOS'
+	}}
+
+
+Agora é possível realizar as devidas execuções de banco de dados (criação de banco, tabelas, etc) executando o script reset.sh:
 
 `$./reset.sh`
 
@@ -121,7 +147,6 @@ Módulos a serem habilitados, para a configuração exemplo:
 
 Para configurar o httpd.conf ou equivalente, siga as instruções em [How to use Django with Apache and mod_wsgi](https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/modwsgi/).
 
-
 A parte de servir os arquivos estáticos é a mais trabalhosa. Essa configuração é necessária porque no servidor de desenvolvimento o django serve esses arquivos, porém, na produção, eles precisam ser configurados para serem servidos pelo servidor web.
 
 Os arquivos estáticos não servidos pelo django são os "tradicionais":  css, javascript e imagens, por exemplo. Para coletar esses arquivos, é preciso executar o comando collectstatic, conforme descrito em [Collect static app](https://docs.djangoproject.com/en/1.6/ref/contrib/staticfiles//).
@@ -138,7 +163,9 @@ Além desses, todos os demais arquivos a serem servidos diretamente pelo apache,
 
 Conforme citado anteriormente, o celery (http://www.celeryproject.org/)  precisa estar rodando, pois ele é o enfileirador de tarefas como a de envio de e-mails e registro de votos.
 
-o script check-services.sh foi criado para checar se o serviço está rodando. Ele pode ser adicionado à crontab.
+O script check-services.sh foi criado para checar se o serviço está rodando. Ele pode ser adicionado à crontab, como no exemplo abaixo, no qual ele executa de 10 em 10 minutos.
+
+	*/10 * * * *  /var/www/helios-server/check-services.sh >/dev/null 2>&1
 
 Nesse mesmo script, também é verificado o celery beat (http://docs.celeryproject.org/en/latest/userguide/periodic-tasks.html), agendador de tarefas periódicas, como limpar a tabela celery_taskmeta, que guarda log das tarefas e pode crescer bastante.
 
@@ -151,6 +178,7 @@ CELERY_TASK_RESULT_EXPIRES = 5184000 # 60 days
 Após iniciar o celery beat, é possível ver uma tarefa periódica criada através da interface administrativa do django, sob Djecelery, periodic tasks.
 
 Se não for desejado fazer a limpeza da tabela dessa forma, basta não iniciar o celery beat.
+
 
 #### Administração pelo site de administração do django
 
@@ -166,7 +194,7 @@ Após finalizar a instalação, você deve entrar em http(s)://endereco-do-seu-s
 
 Outra customização disponível, acessível por essa administração, é a opção de listar ou não uma eleição na página pública inicial do sistema. Se você quiser que uma eleição seja listada, na página de administração do Django, localize a opção `Helios` e clique em *Elections*. Na tela seguinte, clique no nome da eleição que você gostaria que fosse listada na página pública e na tela de edição, marque a opção *Featured p* e salve.
 
-##### Para autenticação federada via shibboleth
+##### Para autenticação federada via shibboleth (ver configuração shibboleth abaixo)
 
 Para a utilização federada do Helios, diversas personalizações foram efetuadas tanto na página pública, quando na parte de gerenciamento de eleições.
 
@@ -176,7 +204,7 @@ Para que a instituição possa ser administrada, é necessário fornecer via int
 No campo institution, selecione a instituição previamente criada.
 Em e-mail, informe o e-mail do administrador. Se desejar, informe a data de expiração desse usuário. Deixe o campo active desmarcado (será marcado quando o usuário se conectar no serviço pela primeira vez).
 
-Para maiores informações da aplicação *django admin site*, visite https://docs.djangoproject.com/en/1.6/ref/contrib/admin/
+Para maiores informações da aplicação *django admin site*, visite https://docs.djangoproject.com/en/1.8/ref/contrib/admin/
 
 #### Configuração dos módulos de autenticação
 
@@ -197,6 +225,32 @@ Ela não é muito completa, mas as configurações principais estão no settings
 AUTH_LDAP_BIND_DN e AUTH_LDAP_BIND_PASSWORD vão ter um valor configurado se o servidor LDAP exigir usuário e senha para fazer consultas. Ou seja, a configuração é caso a caso e uma leitura cuidadosa da documentação disponível no link do django-auth-ldap é recomendada, para outras dúvidas.
 
 ##### Shibboleth
+
+#### Configuração módulo apache shibboleth2
+
+Após instalar o módulo shibboleth para o apache, é necessário realizar algumas configurações.
+
+Um dos arquivos a ser editado é o /etc/shibboleth/shibboleth2.xml.
+Ver exemplo de configuração em:
+https://wiki.rnp.br/display/gidlab/Procedimentos+operacionais+da+CAFe+Expresso e
+https://www.cmu.edu/computing/web/authenticate/web-login/shib.html
+
+Gerar chaves:
+
+sudo openssl genrsa -out /etc/ssl/private/$HOSTNAME.key 4096 -config openssl.cnf
+
+sudo openssl req -new -key /etc/ssl/private/$HOSTNAME.key -out /etc/ssl/private/$HOSTNAME.csr -batch -config openssl.cnf
+
+sudo openssl x509 -req -days 1825 -in /etc/ssl/private/$HOSTNAME.csr -signkey /etc/ssl/private/$HOSTNAME.key -out /etc/ssl/certs/$HOSTNAME.crt
+
+O arquivo openssl.cnf é um arquivo com os dados necessários para a geração de chaves. Ver exemplo em: https://wiki.rnp.br/display/gidlab/Procedimentos+operacionais+da+CAFe+Expresso
+
+Também é necessário editar o arquivo attribute-map.xml, para adicionar os atributos que a aplicação necessita (ver em settings.py).
+
+Após realizar as configurações, é necessário reiniciar o apache.
+Algumas vezes é necessário parar e iniciar o shibd (/etc/init.d/shibd).
+
+
 Habilitar o módulo em settings.py:
 
 AUTH_ENABLED_AUTH_SYSTEMS = get_from_env('AUTH_ENABLED_AUTH_SYSTEMS', 'shibboleth').split(",")
@@ -209,7 +263,7 @@ Configurar demais atributos em settings.py, na seção # Shibboleth auth setting
 
 As configurações indicadas aqui supõe que o provedor de serviço (apache, módulo shibboleth e demais configurações) está configurado e funcional.
 
-#### Alguns lembretes:
+#### Alguns lembretes finais:
 
 LEMBRAR DE ALTERAR EM SETTINGS.PY A CONSTANTE DEBUG DE TRUE PRA FALSE!
 
