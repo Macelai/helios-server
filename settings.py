@@ -25,10 +25,10 @@ TEMPLATE_DEBUG = DEBUG
 #More info: https://docs.djangoproject.com/en/1.7/ref/settings/#allowed-hosts
 
 # set a value for production environment, alongside with debug set to false
-ALLOWED_HOSTS = get_from_env('ALLOWED_HOSTS', 'localhost').split(",")
+ALLOWED_HOSTS = get_from_env('ALLOWED_HOSTS', 'mp-sc-eleicao.labsec.ufsc.br').split(",")
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = get_from_env('SECRET_KEY', 'replaceme')
+SECRET_KEY = get_from_env('SECRET_KEY', 'votacao')
 ROOT_URLCONF = 'urls'
 
 ROOT_PATH = os.path.dirname(__file__)
@@ -36,8 +36,7 @@ ROOT_PATH = os.path.dirname(__file__)
 # add admins of the form: 
 #    ('Ben Adida', 'ben@adida.net'),
 # if you want to be emailed about errors.
-ADMINS = (
-)
+ADMINS = ( 'votacao', 'Votacao' )
 
 MANAGERS = ADMINS
 
@@ -55,7 +54,9 @@ SHOW_USER_INFO = (get_from_env('SHOW_USER_INFO', '1') == '1')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'helios'
+        'NAME': 'helios',
+        'USER': 'votacao',
+        'PASSWORD': 'votacao',
     }
 }
 
@@ -208,8 +209,8 @@ VOTER_UPLOAD_REL_PATH = "voters/%Y/%m/%d"
 
 
 # Change your email settings
-DEFAULT_FROM_EMAIL = get_from_env('DEFAULT_FROM_EMAIL', 'heliosvoting.pt@gmail.com')
-DEFAULT_FROM_NAME = get_from_env('DEFAULT_FROM_NAME', 'Sistema de Votação Eletrônica')
+DEFAULT_FROM_EMAIL = get_from_env('DEFAULT_FROM_EMAIL', 'votacao@example.com')
+DEFAULT_FROM_NAME = get_from_env('DEFAULT_FROM_NAME', 'Sistema de Votacao Eletrônica')
 SERVER_EMAIL = '%s <%s>' % (DEFAULT_FROM_NAME, DEFAULT_FROM_EMAIL)
 
 LOGIN_URL = '/auth/'
@@ -217,7 +218,7 @@ LOGOUT_ON_CONFIRMATION = True
 
 # The two hosts are here so the main site can be over plain HTTP
 # while the voting URLs are served over SSL.
-URL_HOST = get_from_env("URL_HOST", "http://localhost:8000").rstrip("/")
+URL_HOST = get_from_env("URL_HOST", 'https://mp-sc-eleicao.labsec.ufsc.br').rstrip("/")
 
 # IMPORTANT: you should not change this setting once you've created
 # elections, as your elections' cast_url will then be incorrect.
@@ -225,7 +226,7 @@ URL_HOST = get_from_env("URL_HOST", "http://localhost:8000").rstrip("/")
 SECURE_URL_HOST = get_from_env("SECURE_URL_HOST", URL_HOST).rstrip("/")
 
 # election stuff
-SITE_TITLE = get_from_env('SITE_TITLE', _('IFSC E-Voting System'))
+SITE_TITLE = get_from_env('SITE_TITLE', _('Sistema de Votacao do ...'))
 MAIN_LOGO_URL = get_from_env('MAIN_LOGO_URL', '/static/logo.png')
 ALLOW_ELECTION_INFO_URL = (get_from_env('ALLOW_ELECTION_INFO_URL', '0') == '1')
 
@@ -233,9 +234,9 @@ ALLOW_ELECTION_INFO_URL = (get_from_env('ALLOW_ELECTION_INFO_URL', '0') == '1')
 FOOTER_LINKS = json.loads(get_from_env('FOOTER_LINKS', '[]'))
 FOOTER_LOGO_URL = get_from_env('FOOTER_LOGO_URL', None)
 
-WELCOME_MESSAGE = get_from_env('WELCOME_MESSAGE', _('Welcome to IFSC E-Voting System'))
+WELCOME_MESSAGE = get_from_env('WELCOME_MESSAGE', _('Hello World!'))
 
-HELP_EMAIL_ADDRESS = get_from_env('HELP_EMAIL_ADDRESS', 'shirlei@gmail.com')
+HELP_EMAIL_ADDRESS = get_from_env('HELP_EMAIL_ADDRESS', 'labsec.contato@gmail.com')
 
 AUTH_TEMPLATE_BASE = "server_ui/templates/base.html"
 HELIOS_TEMPLATE_BASE = "server_ui/templates/base.html"
@@ -250,10 +251,8 @@ HELIOS_PRIVATE_DEFAULT = True
 
 # authentication systems enabled
 #AUTH_ENABLED_AUTH_SYSTEMS = ['password','facebook','twitter', 'google', 'yahoo']
-#AUTH_ENABLED_AUTH_SYSTEMS = get_from_env('AUTH_ENABLED_AUTH_SYSTEMS', 'shibboleth').split(",")
-#AUTH_DEFAULT_AUTH_SYSTEM = get_from_env('AUTH_DEFAULT_AUTH_SYSTEM', 'shibboleth')
-AUTH_ENABLED_AUTH_SYSTEMS = get_from_env('AUTH_ENABLED_AUTH_SYSTEMS', 'ldap').split(",")
-AUTH_DEFAULT_AUTH_SYSTEM = get_from_env('AUTH_DEFAULT_AUTH_SYSTEM', 'ldap')
+AUTH_ENABLED_AUTH_SYSTEMS = get_from_env('AUTH_ENABLED_AUTH_SYSTEMS', 'password').split(",")
+AUTH_DEFAULT_AUTH_SYSTEM = get_from_env('AUTH_DEFAULT_AUTH_SYSTEM', None)
 
 # google
 GOOGLE_CLIENT_ID = get_from_env('GOOGLE_CLIENT_ID', '')
@@ -288,11 +287,12 @@ CLEVER_CLIENT_ID = get_from_env('CLEVER_CLIENT_ID', "")
 CLEVER_CLIENT_SECRET = get_from_env('CLEVER_CLIENT_SECRET', "")
 
 # email server
-EMAIL_HOST = get_from_env('EMAIL_HOST', 'localhost')
-EMAIL_PORT = int(get_from_env('EMAIL_PORT', "2525"))
-EMAIL_HOST_USER = get_from_env('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = get_from_env('EMAIL_HOST_PASSWORD', '')
-EMAIL_USE_TLS = (get_from_env('EMAIL_USE_TLS', '0') == '1')
+EMAIL_HOST = get_from_env('EMAIL_HOST', 'smtp.sistemas.ufsc.br')
+EMAIL_PORT = int(get_from_env('EMAIL_PORT', '465'))
+EMAIL_HOST_USER = get_from_env('EMAIL_HOST_USER', 'eleicao')
+EMAIL_HOST_PASSWORD = get_from_env('EMAIL_HOST_PASSWORD', 'spiR33ostls')
+# EMAIL_USE_TLS = (get_from_env('EMAIL_USE_TLS', '0') == '1')
+EMAIL_USE_SSL = True
 
 # to use AWS Simple Email Service
 # in which case environment should contain
