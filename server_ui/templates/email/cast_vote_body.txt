@@ -12,9 +12,4 @@ Seu pseudônimo é: {{voter.alias}}.
 
 ---
 
-e-Democracia - Eleições Digitais Seguras
-https://e-democracia.ufsc.br
-
-Serviço prestado pela Coordenadoria de Certificação Digital - CCD/SEPLAN/UFSC
-Desenvolvido pelo LabSEC/INE/CTC
-Apoiado pela SeTIC
+Sistema de Votação Eletrônica

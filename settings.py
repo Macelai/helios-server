@@ -209,7 +209,7 @@ VOTER_UPLOAD_REL_PATH = "voters/%Y/%m/%d"
 
 
 # Change your email settings
-DEFAULT_FROM_EMAIL = get_from_env('DEFAULT_FROM_EMAIL', 'votacao@example.com')
+DEFAULT_FROM_EMAIL = get_from_env('DEFAULT_FROM_EMAIL', 'jean.martina@gmail.com')
 DEFAULT_FROM_NAME = get_from_env('DEFAULT_FROM_NAME', 'Sistema de Votacao Eletrônica')
 SERVER_EMAIL = '%s <%s>' % (DEFAULT_FROM_NAME, DEFAULT_FROM_EMAIL)
 
@@ -234,7 +234,7 @@ ALLOW_ELECTION_INFO_URL = (get_from_env('ALLOW_ELECTION_INFO_URL', '0') == '1')
 FOOTER_LINKS = json.loads(get_from_env('FOOTER_LINKS', '[]'))
 FOOTER_LOGO_URL = get_from_env('FOOTER_LOGO_URL', None)
 
-WELCOME_MESSAGE = get_from_env('WELCOME_MESSAGE', _('Hello World!'))
+WELCOME_MESSAGE = '<h1> <strong><span style="color:#77c300;">Bem-vindo(a) ao Sistema de Votação Eletrônica do MP-SC</span></strong></h1>'
 
 HELP_EMAIL_ADDRESS = get_from_env('HELP_EMAIL_ADDRESS', 'labsec.contato@gmail.com')
 
@@ -247,7 +247,7 @@ HELIOS_VOTERS_UPLOAD = True
 HELIOS_VOTERS_EMAIL = True
 
 # are elections private by default?
-HELIOS_PRIVATE_DEFAULT = True
+HELIOS_PRIVATE_DEFAULT = False
 
 # authentication systems enabled
 #AUTH_ENABLED_AUTH_SYSTEMS = ['password','facebook','twitter', 'google', 'yahoo']
