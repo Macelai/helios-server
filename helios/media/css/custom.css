@@ -1,43 +1,42 @@
 .top-bar {
 	background-color:#ffffff;	
-	background-image:url('/media/img/logo-mpsc.png');
+	background-image:url('/media/img/logo-acmp.png');
 	background-repeat:no-repeat;
-	min-height:80px;
+	min-height:110px;
 }
 #banner {
-	background:#77c300;
+	background:#a21414;
 }
-
 #footer {
-	background:#77c300;
+	background:#a21414;
 }
 #progress_div td.selected {
   background:#DFF0D8;
 }
 .btn-primary,a.btn,.btn-lg,.btn-primary {
-	background-color:#77c300;
-	border-color:#77c300;
+	background-color:#a21414;
+	border-color:#a21414;
 }
 .btn-primary:hover,#proceed_button{
-	background-color:#009933;
-	border-color:#009933;
+	background-color:#e82222;
+	border-color:#e82222;
 }
 a:hover, a:focus {
-  color: #009933;
+  color: #e82222;
   text-decoration: underline;
 }
 .nav-pills>li.active>a,.nav-pills>li.active>a:hover,.nav-pills>li.active>a:focus{
-	color:#77c300;
+	color:#a21414;
 	background-color:#009933;
 }
-.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open .dropdown-toggle.btn-primary {
-  color: #77c300;
-  background-color: #009933;
-  border-color: #77c300;
+.btn-primary:hover, .btn-sucess:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .open .dropdown-toggle.btn-primary {
+  color: #a21414;
+  background-color: #e82222;
+  border-color: #a21414;
 }
 
 .panel-primary > .panel-heading {
-    color: #77c300;
+    color: #a21414;
     background-color: #eeeeee;
     border-color: #eeeeee;    
 }
@@ -49,3 +48,4 @@ a:hover, a:focus {
 :focus{
     outline: 0;
 }
+
