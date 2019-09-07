@@ -7,7 +7,7 @@ for service in ${SERVICES[@]}; do
         echo "$service service running, everything is fine"
     else
         echo "$service is not running"
-        cd /var/www/helios-server && \
+        cd /home/helios/helios-server && \
         source venv/bin/activate
 
         if [ "$service" == "celeryd" ]; then
